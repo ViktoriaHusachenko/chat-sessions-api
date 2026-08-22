@@ -1,0 +1,26 @@
+{
+  "name": "chat-sessions-api",
+  "version": "1.0.0",
+  "description": "Minimal REST API for chat sessions with OpenAI and SQLite pricing tracking",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "check": "node --check src/server.js"
+  },
+  "keywords": [
+    "express",
+    "openai",
+    "chat",
+    "sqlite"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "openai": "^4.40.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
