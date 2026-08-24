@@ -35,9 +35,43 @@
       "total_cost": 0,
       "created_at": "2026-08-22T15:18:19.266Z",
       "updated_at": "2026-08-22T15:18:19.266Z"
+    },
+    {
+      "id": "59370fc9-e06e-45cb-8da4-616886dfd6e2",
+      "title": "Test chat",
+      "model": "gpt-4o-mini",
+      "total_tokens": 50,
+      "total_cost": 0.0000156,
+      "created_at": "2026-08-24T15:36:17.410Z",
+      "updated_at": "2026-08-24T15:36:18.956Z"
     }
   ],
-  "messages": [],
+  "messages": [
+    {
+      "id": "590002a4-95ac-4533-aa17-2589ea1a4ac2",
+      "session_id": "59370fc9-e06e-45cb-8da4-616886dfd6e2",
+      "role": "user",
+      "content": "Привіт! Скажи коротко, що таке REST API.",
+      "model": null,
+      "prompt_tokens": null,
+      "completion_tokens": null,
+      "total_tokens": null,
+      "cost": null,
+      "created_at": "2026-08-24T15:36:18.956Z"
+    },
+    {
+      "id": "52347cf2-6bde-4556-93fe-ab074c73d251",
+      "session_id": "59370fc9-e06e-45cb-8da4-616886dfd6e2",
+      "role": "assistant",
+      "content": "Demo mode response: received \"Привіт! Скажи коротко, що таке REST API.\" and used the session history for context.",
+      "model": "gpt-4o-mini",
+      "prompt_tokens": 32,
+      "completion_tokens": 18,
+      "total_tokens": 50,
+      "cost": 0.0000156,
+      "created_at": "2026-08-24T15:36:18.956Z"
+    }
+  ],
   "model_pricing": [
     {
       "model": "gpt-4o-mini",
@@ -47,8 +81,8 @@
     },
     {
       "model": "gpt-4o",
-      "input_price_per_1k": 0.000005,
-      "output_price_per_1k": 0.000015,
+      "input_price_per_1k": 0.0025,
+      "output_price_per_1k": 0.01,
       "effective_from": "2024-01-01T00:00:00.000Z"
     }
   ]

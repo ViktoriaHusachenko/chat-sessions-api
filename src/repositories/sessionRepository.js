@@ -34,6 +34,28 @@ function getSessionById(sessionId) {
   return row;
 }
 
+function resetSession(sessionId) {
+  try {
+    const store = readStore();
+    const sessionIndex = store.sessions.findIndex((session) => session.id === sessionId);
+    if (sessionIndex === -1) {
+      throw new NotFoundError('Session not found');
+    }
+
+    store.messages = store.messages.filter((message) => message.session_id !== sessionId);
+    store.sessions[sessionIndex].total_tokens = 0;
+    store.sessions[sessionIndex].total_cost = 0;
+    store.sessions[sessionIndex].updated_at = new Date().toISOString();
+    writeStore(store);
+    return store.sessions[sessionIndex];
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new DatabaseError('Failed to reset session', { message: error.message });
+  }
+}
+
 function updateSessionTotals(sessionId, additionalTokens, additionalCost) {
   try {
     const store = readStore();
@@ -57,5 +79,6 @@ function updateSessionTotals(sessionId, additionalTokens, additionalCost) {
 module.exports = {
   createSession,
   getSessionById,
+  resetSession,
   updateSessionTotals,
 };

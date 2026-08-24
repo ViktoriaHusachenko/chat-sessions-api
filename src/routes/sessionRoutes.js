@@ -1,5 +1,5 @@
 const express = require('express');
-const { createNewSession, getSessionMetadata, getSessionHistory, sendMessage } = require('../services/sessionService');
+const { createNewSession, getSessionMetadata, resetSessionHistory, getSessionHistory, sendMessage } = require('../services/sessionService');
 const { ValidationError } = require('../utils/errors');
 
 const router = express.Router();
@@ -32,6 +32,15 @@ router.get('/:id/messages', async (req, res, next) => {
     const { page, limit } = req.query;
     const result = getSessionHistory(req.params.id, page, limit);
     res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/:id/reset', async (req, res, next) => {
+  try {
+    const session = resetSessionHistory(req.params.id);
+    res.json(session);
   } catch (error) {
     next(error);
   }

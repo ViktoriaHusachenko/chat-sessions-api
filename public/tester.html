@@ -177,6 +177,12 @@
             <label for="message">Повідомлення</label>
             <textarea id="message">Привіт! Скажи коротко, що таке REST API.</textarea>
 
+            <label for="model">Модель</label>
+            <select id="model">
+              <option value="gpt-4o-mini">gpt-4o-mini (базова)</option>
+              <option value="gpt-4o">gpt-4o</option>
+            </select>
+
             <div class="buttons">
               <button id="sendBtn">Send message</button>
             </div>
@@ -187,6 +193,7 @@
           <h3>3. Історія</h3>
           <div class="buttons">
             <button id="historyBtn">Load history</button>
+            <button id="resetBtn">Reset session</button>
           </div>
           <div class="hint">Після створення сесії вставте ID у поле вище і натисніть “Send message”.</div>
         </div>
@@ -258,7 +265,10 @@
           const res = await fetch(`${apiBase}/sessions/${sessionId}/messages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: message })
+            body: JSON.stringify({
+              content: message,
+              model: document.getElementById('model').value
+            })
           });
 
           const data = await res.json();
@@ -271,6 +281,26 @@
           }
         } catch (error) {
           setStatus('Не вдалося надіслати повідомлення.', true);
+          showResult({ error: error.message });
+        }
+      }
+
+      async function resetSession() {
+        const sessionId = document.getElementById('sessionId').value;
+        if (!sessionId) {
+          setStatus('Спочатку вставте Session ID.', true);
+          showResult({ error: 'Session ID is required.' });
+          return;
+        }
+
+        setStatus('Скидаю сесію...');
+        try {
+          const res = await fetch(`${apiBase}/sessions/${sessionId}/reset`, { method: 'POST' });
+          const data = await res.json();
+          showResult(data);
+          setStatus(res.ok ? 'Сесію скинуто.' : 'Не вдалося скинути сесію.', !res.ok);
+        } catch (error) {
+          setStatus('Не вдалося скинути сесію.', true);
           showResult({ error: error.message });
         }
       }
@@ -300,6 +330,7 @@
       document.getElementById('createBtn').addEventListener('click', createSession);
       document.getElementById('sendBtn').addEventListener('click', sendMessage);
       document.getElementById('historyBtn').addEventListener('click', loadHistory);
+      document.getElementById('resetBtn').addEventListener('click', resetSession);
     </script>
   </body>
 </html>

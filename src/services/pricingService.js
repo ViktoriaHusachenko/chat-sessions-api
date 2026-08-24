@@ -1,14 +1,18 @@
-const { db } = require('../repositories/database');
-const { DatabaseError } = require('../utils/errors');
+const { readStore } = require('../repositories/database');
+const { DatabaseError, ValidationError } = require('../utils/errors');
 
 function getModelPricing(model) {
   try {
-    const row = db.prepare('SELECT * FROM model_pricing WHERE model = ?').get(model);
+    const store = readStore();
+    const row = store.model_pricing.find((pricing) => pricing.model === model);
     if (!row) {
-      throw new Error(`No pricing found for model: ${model}`);
+      throw new ValidationError(`Model "${model}" is not supported or has no pricing configured.`);
     }
     return row;
   } catch (error) {
+    if (error instanceof ValidationError) {
+      throw error;
+    }
     throw new DatabaseError('Failed to load model pricing', { model, message: error.message });
   }
 }

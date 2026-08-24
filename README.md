@@ -9,7 +9,7 @@ The implementation uses OpenAI model `gpt-4o-mini` and the following public pric
 - Input: $0.15 per 1M tokens = $0.00015 per 1K tokens
 - Output: $0.60 per 1M tokens = $0.00060 per 1K tokens
 
-These values are stored in the `model_pricing` table and can be updated without changing code. The cost formula is:
+These values are stored in the `model_pricing` collection in the JSON store and can be updated without changing code. The cost formula is:
 
 `totalCost = (promptTokens / 1000) * inputPricePer1k + (completionTokens / 1000) * outputPricePer1k`
 
@@ -20,7 +20,7 @@ If the OpenAI SDK returns additional usage categories in future (for example cac
 - Create a chat session
 - Send a user message and receive an assistant reply from OpenAI
 - Include relevant session history when calling OpenAI
-- Store user and assistant messages with token usage and cost in SQLite
+- Store user and assistant messages with token usage, model, and cost in a JSON file
 - Maintain session totals for `total_tokens` and `total_cost`
 - Return session history with accumulated cost
 - Basic input validation and centralized error handling
@@ -103,9 +103,12 @@ Body:
 
 ```json
 {
-  "content": "Hello! Can you summarize the project plan?"
+  "content": "Hello! Can you summarize the project plan?",
+  "model": "gpt-4o-mini"
 }
 ```
+
+`model` is optional. When omitted, the session's base model is used. The model must have a pricing entry in `model_pricing`; otherwise the API returns `400` before calling OpenAI. The assistant message stores the model actually used, and its cost uses that model's tariff.
 
 Example:
 
@@ -117,7 +120,21 @@ curl -X POST http://localhost:3000/sessions/<session_id>/messages \
 
 Response includes the user message, assistant reply, usage values, and per-interaction cost.
 
-### 3) Read session metadata
+### 3) Reset a session
+
+```http
+POST /sessions/:id/reset
+```
+
+Reset keeps the same session ID, title, and base model. It physically deletes all messages belonging to the session and sets `total_tokens` and `total_cost` to zero. A later `GET /sessions/:id/messages` returns an empty list.
+
+Example:
+
+```bash
+curl -X POST http://localhost:3000/sessions/<session_id>/reset
+```
+
+### 4) Read session metadata
 
 ```http
 GET /sessions/:id
@@ -129,7 +146,7 @@ Example:
 curl http://localhost:3000/sessions/<session_id>
 ```
 
-### 4) Read session messages/history
+### 5) Read session messages/history
 
 ```http
 GET /sessions/:id/messages
@@ -149,7 +166,7 @@ The project uses a simple JSON file storage for the MVP, which keeps the project
 - `messages`
 - `model_pricing`
 
-The default pricing entries are seeded automatically if the collection is empty.
+The default pricing entries are seeded automatically if the collection is empty. The file is rewritten for each mutation; interaction messages and session totals are persisted together in one write, and reset removes old message records from the file.
 
 ## Known limitations / intentionally not implemented
 

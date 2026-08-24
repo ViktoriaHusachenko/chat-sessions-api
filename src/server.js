@@ -20,6 +20,7 @@ app.get('/', (req, res) => {
       sessions: '/sessions',
       createSession: 'POST /sessions',
       sendMessage: 'POST /sessions/:id/messages',
+      resetSession: 'POST /sessions/:id/reset',
       sessionHistory: 'GET /sessions/:id/messages',
       sessionDetails: 'GET /sessions/:id',
       tester: '/tester.html',

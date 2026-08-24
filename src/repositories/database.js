@@ -18,8 +18,8 @@ const defaultPricing = [
   },
   {
     model: 'gpt-4o',
-    input_price_per_1k: 0.000005,
-    output_price_per_1k: 0.000015,
+    input_price_per_1k: 0.0025,
+    output_price_per_1k: 0.01,
     effective_from: '2024-01-01T00:00:00.000Z',
   },
 ];

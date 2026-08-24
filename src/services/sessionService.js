@@ -1,7 +1,7 @@
-const { getSessionById, createSession } = require('../repositories/sessionRepository');
+const { getSessionById, createSession, resetSession } = require('../repositories/sessionRepository');
 const { getMessagesBySession, createInteractionMessagePair } = require('../repositories/messageRepository');
 const { createChatCompletion } = require('./openAIService');
-const { calculateCost } = require('./pricingService');
+const { calculateCost, getModelPricing } = require('./pricingService');
 const { ValidationError } = require('../utils/errors');
 const config = require('../config/env');
 
@@ -24,6 +24,10 @@ function createNewSession(payload) {
 
 function getSessionMetadata(sessionId) {
   return getSessionById(sessionId);
+}
+
+function resetSessionHistory(sessionId) {
+  return resetSession(sessionId);
 }
 
 function getSessionHistory(sessionId, page = 1, limit = 50) {
@@ -59,6 +63,13 @@ async function sendMessage(sessionId, payload) {
   }
 
   const session = getSessionById(sessionId);
+  const requestedModel = payload?.model === undefined ? session.model : payload.model;
+  if (typeof requestedModel !== 'string' || !requestedModel.trim()) {
+    throw new ValidationError('Model must be a non-empty string.');
+  }
+  const model = requestedModel.trim();
+  getModelPricing(model);
+
   const history = getMessagesBySession(sessionId, { limit: Number.MAX_SAFE_INTEGER, offset: 0 });
   const contextMessages = buildContextMessages(history, config.sessionContextLimit);
 
@@ -69,19 +80,21 @@ async function sendMessage(sessionId, payload) {
 
   const response = await createChatCompletion({
     messages: chatMessages,
-    model: session.model,
+    model,
   });
 
   const usage = response.usage || {};
   const promptTokens = Number(usage.prompt_tokens || 0);
   const completionTokens = Number(usage.completion_tokens || 0);
   const totalTokens = Number(usage.total_tokens || (promptTokens + completionTokens));
-  const cost = calculateCost(session.model, promptTokens, completionTokens);
+  const usedModel = response.model || model;
+  const cost = calculateCost(usedModel, promptTokens, completionTokens);
 
   const { userMessage, assistantMessage } = createInteractionMessagePair({
     sessionId,
     userContent: content,
     assistantContent: response.content,
+    model: usedModel,
     promptTokens,
     completionTokens,
     totalTokens,
@@ -106,6 +119,7 @@ async function sendMessage(sessionId, payload) {
 module.exports = {
   createNewSession,
   getSessionMetadata,
+  resetSessionHistory,
   getSessionHistory,
   sendMessage,
 };

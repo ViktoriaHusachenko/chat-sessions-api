@@ -1,7 +1,7 @@
 {
   "name": "chat-sessions-api",
   "version": "1.0.0",
-  "description": "Minimal REST API for chat sessions with OpenAI and SQLite pricing tracking",
+  "description": "Minimal REST API for chat sessions with OpenAI and JSON-file pricing tracking",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -12,7 +12,7 @@
     "express",
     "openai",
     "chat",
-    "sqlite"
+    "json-storage"
   ],
   "license": "MIT",
   "dependencies": {

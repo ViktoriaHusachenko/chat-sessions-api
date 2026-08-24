@@ -2,7 +2,7 @@ const { randomUUID } = require('crypto');
 const { readStore, writeStore } = require('./database');
 const { DatabaseError, NotFoundError } = require('../utils/errors');
 
-function createMessage({ sessionId, role, content, promptTokens, completionTokens, totalTokens, cost }) {
+function createMessage({ sessionId, role, content, model, promptTokens, completionTokens, totalTokens, cost }) {
   try {
     const store = readStore();
     const id = randomUUID();
@@ -12,6 +12,7 @@ function createMessage({ sessionId, role, content, promptTokens, completionToken
       session_id: sessionId,
       role,
       content,
+      model: model || null,
       prompt_tokens: promptTokens ?? null,
       completion_tokens: completionTokens ?? null,
       total_tokens: totalTokens ?? null,
@@ -27,7 +28,7 @@ function createMessage({ sessionId, role, content, promptTokens, completionToken
   }
 }
 
-function createInteractionMessagePair({ sessionId, userContent, assistantContent, promptTokens, completionTokens, totalTokens, cost }) {
+function createInteractionMessagePair({ sessionId, userContent, assistantContent, model, promptTokens, completionTokens, totalTokens, cost }) {
   try {
     const store = readStore();
     const session = store.sessions.find((item) => item.id === sessionId);
@@ -35,27 +36,35 @@ function createInteractionMessagePair({ sessionId, userContent, assistantContent
       throw new NotFoundError('Session not found');
     }
 
-    const userMessage = createMessage({
-      sessionId,
+    const sessionIndex = store.sessions.findIndex((item) => item.id === sessionId);
+    const createdAt = new Date().toISOString();
+    const userMessage = {
+      id: randomUUID(),
+      session_id: sessionId,
       role: 'user',
       content: userContent,
-      promptTokens: null,
-      completionTokens: null,
-      totalTokens: null,
+      model: null,
+      prompt_tokens: null,
+      completion_tokens: null,
+      total_tokens: null,
       cost: null,
-    });
+      created_at: createdAt,
+    };
 
-    const assistantMessage = createMessage({
-      sessionId,
+    const assistantMessage = {
+      id: randomUUID(),
+      session_id: sessionId,
       role: 'assistant',
       content: assistantContent,
-      promptTokens,
-      completionTokens,
-      totalTokens,
-      cost,
-    });
+      model,
+      prompt_tokens: promptTokens ?? null,
+      completion_tokens: completionTokens ?? null,
+      total_tokens: totalTokens ?? null,
+      cost: cost ?? null,
+      created_at: new Date().toISOString(),
+    };
 
-    const sessionIndex = store.sessions.findIndex((item) => item.id === sessionId);
+    store.messages.push(userMessage, assistantMessage);
     store.sessions[sessionIndex].total_tokens = Number(store.sessions[sessionIndex].total_tokens) + Number(totalTokens || 0);
     store.sessions[sessionIndex].total_cost = Number(store.sessions[sessionIndex].total_cost) + Number(cost || 0);
     store.sessions[sessionIndex].updated_at = new Date().toISOString();
