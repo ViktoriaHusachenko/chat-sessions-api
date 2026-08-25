@@ -51,20 +51,16 @@ cp .env.example .env
 ```env
 PORT=3000
 DATABASE_PATH=./data/chat_sessions.json
-OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4o-mini
 SESSION_CONTEXT_LIMIT=20
 ```
 
-If `OPENAI_API_KEY` is missing or still contains a placeholder value, the app automatically switches to a local demo response so the full REST flow can still be tested without external API access.
-
 4. Start the server:
 
-```bash
-npm start
-```
 
-The server initializes the JSON data store automatically on startup.
+npm start
+http://localhost:3000/tester.html
 
 ## API endpoints
 
@@ -176,6 +172,4 @@ The default pricing entries are seeded automatically if the collection is empty.
 - No automatic admin UI for price updates
 - No robust retry policy beyond simple OpenAI error mapping for this MVP
 
-## Notes
 
-This is intentionally a minimal working implementation for a test or demo backend. It follows the requested architecture with separate service, repository, and middleware layers while keeping the project simple to run locally.

@@ -6,25 +6,25 @@
     <title>Chat API Demo</title>
     <style>
       :root {
-        --bg: #f3f4f6;
-        --panel: #ffffff;
-        --card: #f8fafc;
-        --text: #111827;
-        --muted: #6b7280;
-        --border: #e5e7eb;
-        --primary: #2563eb;
-        --primary-dark: #1d4ed8;
-        --success: #16a34a;
-        --danger: #dc2626;
+        --bg: #111315;
+        --panel: #1a1d1f;
+        --card: #202427;
+        --text: #f2f5f3;
+        --muted: #9aa6a0;
+        --border: #353c3a;
+        --primary: #b8f36b;
+        --primary-dark: #d1ff91;
+        --success: #b8f36b;
+        --danger: #ff8178;
       }
 
       * { box-sizing: border-box; }
 
       body {
         margin: 0;
-        background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%);
+        background: radial-gradient(circle at 10% 0%, #27352c 0, transparent 34%), var(--bg);
         color: var(--text);
-        font-family: "Segoe UI", Tahoma, sans-serif;
+        font-family: "Trebuchet MS", Verdana, sans-serif;
         min-height: 100vh;
         padding: 40px 20px;
       }
@@ -37,14 +37,23 @@
       .panel {
         background: var(--panel);
         border: 1px solid var(--border);
-        border-radius: 18px;
-        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+        border-radius: 12px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
         padding: 28px;
       }
 
       h1 {
         margin: 0 0 10px;
-        font-size: 2rem;
+        font-size: 2.2rem;
+        letter-spacing: 0;
+      }
+
+      h1::before {
+        content: "●";
+        color: var(--primary);
+        font-size: 1rem;
+        margin-right: 10px;
+        vertical-align: middle;
       }
 
       .subtitle {
@@ -62,7 +71,7 @@
       .form-block {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 14px;
+        border-radius: 8px;
         padding: 18px;
       }
 
@@ -85,9 +94,19 @@
 
       input, textarea {
         border: 1px solid var(--border);
-        background: white;
+        background: #151819;
         color: var(--text);
         padding: 11px 12px;
+      }
+
+      select {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #151819;
+        color: var(--text);
+        padding: 11px 12px;
+        font-size: 15px;
       }
 
       textarea {
@@ -105,7 +124,7 @@
       button {
         border: none;
         background: var(--primary);
-        color: white;
+        color: #182010;
         padding: 12px 16px;
         font-weight: 700;
         cursor: pointer;
@@ -114,6 +133,7 @@
 
       button:hover {
         background: var(--primary-dark);
+        transform: translateY(-1px);
       }
 
       .status {
@@ -128,9 +148,10 @@
 
       pre {
         margin-top: 20px;
-        background: #0f172a;
-        color: #e2e8f0;
-        border-radius: 12px;
+        background: #0d1010;
+        color: #d5e8d5;
+        border: 1px solid var(--border);
+        border-radius: 8px;
         padding: 18px;
         white-space: pre-wrap;
         line-height: 1.5;
@@ -217,6 +238,14 @@
         outputEl.textContent = JSON.stringify(data, null, 2);
       }
 
+      async function readResponse(response) {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error?.message || `Request failed (${response.status})`);
+        }
+        return data;
+      }
+
       async function createSession() {
         const title = document.getElementById('title').value || 'Demo chat';
         setStatus('Створюю сесію...');
@@ -228,17 +257,17 @@
             body: JSON.stringify({ model: 'gpt-4o-mini', title })
           });
 
-          const data = await res.json();
+          const data = await readResponse(res);
           showResult(data);
 
           if (data && data.id) {
             document.getElementById('sessionId').value = data.id;
             setStatus('Сесію створено успішно.');
           } else {
-            setStatus('Не вдалося створити сесію.', true);
+            throw new Error('API did not return a session ID.');
           }
         } catch (error) {
-          setStatus('Помилка підключення до сервера.', true);
+          setStatus(error.message, true);
           showResult({ error: error.message });
         }
       }
@@ -271,16 +300,12 @@
             })
           });
 
-          const data = await res.json();
+          const data = await readResponse(res);
           showResult(data);
 
-          if (data && data.error) {
-            setStatus('OpenAI повернув помилку. Перевірте квоту і платіжні дані.', true);
-          } else {
-            setStatus('Повідомлення надіслано.');
-          }
+          setStatus('Повідомлення надіслано.');
         } catch (error) {
-          setStatus('Не вдалося надіслати повідомлення.', true);
+          setStatus(error.message, true);
           showResult({ error: error.message });
         }
       }
@@ -296,11 +321,11 @@
         setStatus('Скидаю сесію...');
         try {
           const res = await fetch(`${apiBase}/sessions/${sessionId}/reset`, { method: 'POST' });
-          const data = await res.json();
+          const data = await readResponse(res);
           showResult(data);
-          setStatus(res.ok ? 'Сесію скинуто.' : 'Не вдалося скинути сесію.', !res.ok);
+          setStatus('Сесію скинуто.');
         } catch (error) {
-          setStatus('Не вдалося скинути сесію.', true);
+          setStatus(error.message, true);
           showResult({ error: error.message });
         }
       }
@@ -318,11 +343,11 @@
 
         try {
           const res = await fetch(`${apiBase}/sessions/${sessionId}/messages?page=1&limit=20`);
-          const data = await res.json();
+          const data = await readResponse(res);
           showResult(data);
           setStatus('Історію завантажено.');
         } catch (error) {
-          setStatus('Не вдалося завантажити історію.', true);
+          setStatus(error.message, true);
           showResult({ error: error.message });
         }
       }
